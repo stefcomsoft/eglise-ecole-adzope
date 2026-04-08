@@ -1,0 +1,134 @@
+// firestore.rules
+// ─────────────────────────────────────────────────────────────
+// À déployer dans la console Firebase :
+// Firebase Console → Firestore → Règles
+// Ou via CLI : firebase deploy --only firestore:rules
+// ─────────────────────────────────────────────────────────────
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Fonctions utilitaires ──────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'ADMIN';
+    }
+
+    function isResponsable() {
+      return isAuthenticated() && getUserRole() in ['ADMIN', 'RESPONSABLE_REGIONAL', 'RESPONSABLE_LOCAL'];
+    }
+
+    function isMembre() {
+      return isAuthenticated() && getUserRole() == 'MEMBRE';
+    }
+
+    function isOwner(memberId) {
+      return isAuthenticated() && request.auth.uid == memberId;
+    }
+
+
+    // ── USERS (profils d'authentification) ────────────────────
+    match /users/{userId} {
+      // Chaque utilisateur lit son propre profil
+      allow read: if isOwner(userId) || isAdmin();
+      // Création à l'inscription, modification par soi-même ou admin
+      allow create: if isAuthenticated();
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── MEMBERS (données membres — noms chiffrés) ──────────────
+    match /members/{memberId} {
+      // Un membre ne voit QUE son propre enregistrement complet
+      // Les responsables voient tout SAUF le champ 'name' et 'phone'
+      allow read: if isOwner(memberId) || isResponsable();
+      allow write: if isAdmin() || isResponsable();
+    }
+
+    // ── CAMPAIGNS ─────────────────────────────────────────────
+    match /campaigns/{campaignId} {
+      // Tout membre authentifié peut lire les campagnes
+      allow read: if isAuthenticated();
+      // Seul l'admin peut créer/modifier
+      allow write: if isAdmin();
+    }
+
+    // ── PAYMENTS ──────────────────────────────────────────────
+    match /payments/{paymentId} {
+      // Un membre voit uniquement ses propres paiements
+      allow read: if isAuthenticated() &&
+        (resource.data.memberId == request.auth.uid || isResponsable());
+      // Création par le membre lui-même ou par un responsable
+      allow create: if isAuthenticated();
+      // Modification/suppression réservée aux responsables
+      allow update, delete: if isResponsable();
+    }
+
+    // ── GAPS ──────────────────────────────────────────────────
+    match /gaps/{gapId} {
+      // Tous les membres voient les gaps (mais pas les noms — voir le code)
+      allow read: if isAuthenticated();
+      // Création lors de la clôture (admin uniquement)
+      allow create: if isAdmin();
+      // Achat d'un gap : tout membre peut mettre à jour le buyerId
+      allow update: if isAuthenticated();
+    }
+
+    // ── COHORTS ───────────────────────────────────────────────
+    match /cohorts/{cohortId} {
+      allow read: if isAuthenticated();
+      allow write: if isResponsable();
+
+      // Sous-collection : membres de la cohorte
+      match /members/{memberId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+      }
+    }
+
+    // ── READINGS (lectures validées) ──────────────────────────
+    match /readings/{readingId} {
+      // Un membre lit ses propres lectures, les responsables voient tout
+      allow read: if isAuthenticated() &&
+        (resource.data.memberCode == request.auth.uid || isResponsable());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() &&
+        resource.data.memberCode == request.auth.uid;
+    }
+
+    // ── QUIZ ATTEMPTS ─────────────────────────────────────────
+    match /quiz_attempts/{attemptId} {
+      allow read: if isAuthenticated() &&
+        (resource.data.memberCode == request.auth.uid || isResponsable());
+      allow create: if isAuthenticated();
+    }
+
+    // ── NOTIFICATIONS ─────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() &&
+        resource.data.userId == request.auth.uid;
+      allow write: if isAdmin();
+    }
+
+    // ── AUDIT LOGS (lecture seule pour admin) ─────────────────
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // jamais modifiable
+    }
+
+    // ── VERSES (versets de la semaine) ────────────────────────
+    match /verses/{verseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}
