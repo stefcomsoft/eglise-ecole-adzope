@@ -563,15 +563,17 @@ const Sidebar = ({ user, current, onChange, onLogout }) => {
     { id: "notifications", label: "Notifications", icon: Icons.bell },
   ];
   const adminNav = [
-    { id: "admin_dashboard", label: "Tableau de bord", icon: Icons.home },
-    { id: "membres", label: "Membres & RBAC", icon: Icons.users },
-    { id: "campagne", label: "Campagne", icon: Icons.chart },
-    { id: "admin_gaps", label: "Gestion Gaps", icon: Icons.gift },
-    { id: "admin_cohortes", label: "Cohortes", icon: Icons.bible },
-    { id: "gouvernance", label: "Gouvernance & Org.", icon: Icons.shield },
-    { id: "statistiques", label: "Statistiques", icon: Icons.trending },
-    { id: "communications", label: "Communications", icon: Icons.mail },
-    { id: "parametres", label: "Paramètres & Séc.", icon: Icons.settings },
+    { id: "admin_dashboard", label: "Tableau de bord",    icon: Icons.home     },
+    { id: "projets",         label: "Projets",            icon: Icons.chart    },
+    { id: "sondages",        label: "Sondages",           icon: Icons.trending },
+    { id: "membres",         label: "Membres & RBAC",     icon: Icons.users    },
+    { id: "campagne",        label: "Campagne",           icon: Icons.chart    },
+    { id: "admin_gaps",      label: "Gestion Gaps",       icon: Icons.gift     },
+    { id: "admin_cohortes",  label: "Cohortes",           icon: Icons.bible    },
+    { id: "gouvernance",     label: "Gouvernance & Org.", icon: Icons.shield   },
+    { id: "statistiques",    label: "Statistiques",       icon: Icons.trending },
+    { id: "communications",  label: "Communications",     icon: Icons.mail     },
+    { id: "parametres",      label: "Paramètres & Séc.",  icon: Icons.settings },
   ];
 
   const isAdmin = user.role !== "MEMBRE";
@@ -585,10 +587,10 @@ const Sidebar = ({ user, current, onChange, onLogout }) => {
             <Icon d={Icons.bible} color="white" size={18} />
           </div>
           <div>
-            <h1>Église-École</h1>
+            <h1>Homéris</h1>
           </div>
         </div>
-        <span>Adzopé • Campagne 2025</span>
+        <span>Plateforme multi-projets • 2025</span>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
@@ -2005,6 +2007,448 @@ const ParametresView = () => (
   </div>
 );
 
+// ─── SONDAGES DATA ─────────────────────────────────────────────────────────────
+const SONDAGES_DATA = [
+  {
+    id: "S-2025-01",
+    titre: "Adhésion au projet Dispensaire Abradin",
+    projet: "Dispensaire communautaire",
+    statut: "actif",
+    dateDebut: "01/04/2025",
+    dateFin: "30/04/2025",
+    reponses: 312,
+    cible: 2000,
+    questions: [
+      {
+        id: "q1",
+        texte: "Êtes-vous favorable à la construction d'un dispensaire dans les villages d'Abradin ?",
+        type: "oui_non",
+        resultats: { oui: 287, non: 18, abstention: 7 },
+      },
+      {
+        id: "q2",
+        texte: "Êtes-vous prêt à contribuer financièrement à ce projet ?",
+        type: "oui_non",
+        resultats: { oui: 241, non: 54, abstention: 17 },
+      },
+      {
+        id: "q3",
+        texte: "Quel montant mensuel pourriez-vous engager ?",
+        type: "choix",
+        options: ["< 2 000 FCFA", "2 000 – 5 000 FCFA", "5 000 – 10 000 FCFA", "> 10 000 FCFA"],
+        resultats: [89, 134, 67, 22],
+      },
+    ],
+  },
+  {
+    id: "S-2025-02",
+    titre: "Priorités de la prochaine Assemblée Générale",
+    projet: "Eglise-Ecole Adzopé",
+    statut: "actif",
+    dateDebut: "10/04/2025",
+    dateFin: "25/04/2025",
+    reponses: 891,
+    cible: 1842,
+    questions: [
+      {
+        id: "q1",
+        texte: "Quelle doit être la priorité à l'AG de mai 2025 ?",
+        type: "choix",
+        options: ["Bilan financier 2024", "Avancement chantier", "Election responsables", "Nouveau cycle cotisation"],
+        resultats: [234, 312, 189, 156],
+      },
+      {
+        id: "q2",
+        texte: "Approuvez-vous le bilan des travaux de la phase élévation R+1 ?",
+        type: "oui_non",
+        resultats: { oui: 812, non: 43, abstention: 36 },
+      },
+    ],
+  },
+  {
+    id: "S-2025-03",
+    titre: "Adhésion Centre de Formation",
+    projet: "Centre de formation",
+    statut: "brouillon",
+    dateDebut: null,
+    dateFin: null,
+    reponses: 0,
+    cible: 1500,
+    questions: [
+      {
+        id: "q1",
+        texte: "Seriez-vous intéressé par un centre de formation polyvalent dans votre région ?",
+        type: "oui_non",
+        resultats: { oui: 0, non: 0, abstention: 0 },
+      },
+    ],
+  },
+];
+
+// ─── SONDAGES VIEW ─────────────────────────────────────────────────────────────
+const SondagesView = () => {
+  const [selected, setSelected] = useState(null);
+  const [showForm, setShowForm]  = useState(false);
+  const [exported, setExported]  = useState(false);
+
+  const sondage = selected ? SONDAGES_DATA.find(s => s.id === selected) : null;
+
+  const StatutBadge = ({ statut }) => {
+    const map = {
+      actif:     { label: "Actif",     bg: COLORS.greenLight, color: COLORS.green },
+      brouillon: { label: "Brouillon", bg: "#FFF3CD",         color: "#856404"    },
+      clos:      { label: "Clôturé",   bg: COLORS.redLight,   color: COLORS.red   },
+    };
+    const s = map[statut] || map.brouillon;
+    return (
+      <span className="badge" style={{ background: s.bg, color: s.color }}>{s.label}</span>
+    );
+  };
+
+  const handleExport = () => {
+    setExported(true);
+    setTimeout(() => setExported(false), 3000);
+  };
+
+  // ── Vue détail sondage ──────────────────────────────────────────────────────
+  if (sondage) {
+    const totalReponses = sondage.reponses;
+    const tauxPart = Math.round((totalReponses / sondage.cible) * 100);
+
+    return (
+      <div className="animate-in">
+        <div className="page-header" style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={() => setSelected(null)}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <Icon d={Icons.back} size={14} /> Retour
+          </button>
+          <div style={{ flex: 1 }}>
+            <h2>{sondage.titre}</h2>
+            <p>Projet : {sondage.projet} — {totalReponses} réponses sur {sondage.cible} cibles</p>
+          </div>
+          <StatutBadge statut={sondage.statut} />
+          <button className="btn btn-primary btn-sm" onClick={handleExport}>
+            <Icon d={Icons.download} size={14} color="white" />
+            {exported ? "Exporté !" : "Export AG"}
+          </button>
+        </div>
+
+        {exported && (
+          <div style={{ background: COLORS.greenLight, color: COLORS.green, padding: "12px 18px", borderRadius: 10, marginBottom: 18, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+            <Icon d={Icons.check} size={16} color={COLORS.green} />
+            Rapport exporté — prêt pour la préparation de l'Assemblée Générale.
+          </div>
+        )}
+
+        {/* KPIs */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+          {[
+            { label: "Réponses collectées", val: totalReponses.toLocaleString("fr-FR"), color: COLORS.emerald },
+            { label: "Taux de participation", val: tauxPart + "%", color: tauxPart >= 50 ? COLORS.green : COLORS.gold },
+            { label: "Cible définie", val: sondage.cible.toLocaleString("fr-FR"), color: COLORS.blue },
+            { label: "Questions posées", val: sondage.questions.length, color: COLORS.slate },
+          ].map(k => (
+            <div key={k.label} className="kpi-card" style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: k.color, fontFamily: "'Playfair Display',serif" }}>{k.val}</div>
+              <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Barre de progression globale */}
+        <div className="card" style={{ padding: "18px 24px", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 10 }}>
+            <span style={{ fontWeight: 600, color: COLORS.slate }}>Progression du sondage</span>
+            <span style={{ color: COLORS.muted }}>{sondage.dateDebut} → {sondage.dateFin || "En cours"}</span>
+          </div>
+          <div style={{ height: 10, background: COLORS.bg, borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${Math.min(tauxPart, 100)}%`, background: COLORS.emerald, borderRadius: 6, transition: "width 1s ease" }} />
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 8 }}>
+            {totalReponses.toLocaleString("fr-FR")} réponses · {(sondage.cible - totalReponses).toLocaleString("fr-FR")} restantes pour atteindre la cible
+          </div>
+        </div>
+
+        {/* Résultats par question */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {sondage.questions.map((q, qi) => (
+            <div key={q.id} className="card">
+              <div className="card-header">
+                <span className="card-title">Q{qi + 1} — {q.texte}</span>
+              </div>
+              <div style={{ padding: "16px 20px" }}>
+
+                {/* Question Oui/Non */}
+                {q.type === "oui_non" && (() => {
+                  const total = q.resultats.oui + q.resultats.non + q.resultats.abstention;
+                  const pOui  = total > 0 ? Math.round((q.resultats.oui  / total) * 100) : 0;
+                  const pNon  = total > 0 ? Math.round((q.resultats.non  / total) * 100) : 0;
+                  const pAbs  = total > 0 ? Math.round((q.resultats.abstention / total) * 100) : 0;
+                  return (
+                    <div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16 }}>
+                        {[
+                          { label: "Oui",        val: q.resultats.oui,         pct: pOui, color: COLORS.green, bg: COLORS.greenLight },
+                          { label: "Non",         val: q.resultats.non,         pct: pNon, color: COLORS.red,   bg: COLORS.redLight   },
+                          { label: "Abstention",  val: q.resultats.abstention,  pct: pAbs, color: COLORS.muted, bg: COLORS.bg         },
+                        ].map(r => (
+                          <div key={r.label} style={{ textAlign: "center", padding: "16px 10px", background: r.bg, borderRadius: 10 }}>
+                            <div style={{ fontSize: 28, fontWeight: 700, color: r.color, fontFamily: "'Playfair Display',serif" }}>{r.pct}%</div>
+                            <div style={{ fontSize: 12, color: r.color, fontWeight: 600 }}>{r.label}</div>
+                            <div style={{ fontSize: 11, color: COLORS.muted }}>{r.val.toLocaleString("fr-FR")} réponses</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Barre visuelle */}
+                      <div style={{ display: "flex", height: 8, borderRadius: 4, overflow: "hidden" }}>
+                        <div style={{ width: `${pOui}%`, background: COLORS.green }} />
+                        <div style={{ width: `${pNon}%`, background: COLORS.red   }} />
+                        <div style={{ width: `${pAbs}%`, background: COLORS.muted }} />
+                      </div>
+                      <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 6 }}>
+                        Total : {total.toLocaleString("fr-FR")} réponses
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Question à choix multiple */}
+                {q.type === "choix" && (() => {
+                  const total = q.resultats.reduce((a, b) => a + b, 0);
+                  const colors = [COLORS.emerald, COLORS.gold, COLORS.blue, COLORS.purple];
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {q.options.map((opt, oi) => {
+                        const p = total > 0 ? Math.round((q.resultats[oi] / total) * 100) : 0;
+                        return (
+                          <div key={opt}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
+                              <span style={{ color: COLORS.slate }}>{opt}</span>
+                              <span style={{ fontWeight: 700, color: colors[oi % colors.length] }}>{p}% <span style={{ color: COLORS.muted, fontWeight: 400 }}>({q.resultats[oi]})</span></span>
+                            </div>
+                            <div style={{ height: 8, background: COLORS.bg, borderRadius: 4, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${p}%`, background: colors[oi % colors.length], borderRadius: 4, transition: "width 0.8s ease" }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 4 }}>Total : {total.toLocaleString("fr-FR")} réponses</div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Lecture stratégique AG */}
+        <div className="card" style={{ marginTop: 20, padding: "18px 24px", borderLeft: `4px solid ${COLORS.gold}` }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.slate, marginBottom: 10 }}>
+            Lecture stratégique — Préparation AG
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {sondage.id === "S-2025-01" && [
+              `92% des répondants sont favorables au projet (287/312).`,
+              `77% sont prêts à contribuer financièrement.`,
+              `43% envisagent une contribution entre 2 000 et 5 000 FCFA/mois.`,
+              `Recommandation : lancer la phase d'inscription officielle au projet Dispensaire.`,
+            ].map((txt, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, color: COLORS.slateLight }}>
+                <Icon d={Icons.check} size={14} color={COLORS.emerald} />
+                {txt}
+              </div>
+            ))}
+            {sondage.id === "S-2025-02" && [
+              `48% priorité à l'avancement du chantier — point principal de l'AG.`,
+              `91% approuvent le bilan des travaux R+1 (812/891).`,
+              `Recommandation : préparer une présentation chantier détaillée pour l'AG.`,
+            ].map((txt, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, fontSize: 13, color: COLORS.slateLight }}>
+                <Icon d={Icons.check} size={14} color={COLORS.emerald} />
+                {txt}
+              </div>
+            ))}
+            {sondage.id === "S-2025-03" && (
+              <div style={{ fontSize: 13, color: COLORS.muted, fontStyle: "italic" }}>
+                Sondage en brouillon — aucune donnée disponible. Publiez le sondage pour collecter des réponses.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Vue liste sondages ──────────────────────────────────────────────────────
+  return (
+    <div className="animate-in">
+      <div className="page-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <h2>Sondages</h2>
+          <p>Consultez l'adhésion aux projets et préparez vos Assemblées Générales</p>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowForm(s => !s)}>
+          <Icon d={Icons.plus} size={15} color="white" />
+          {showForm ? "Annuler" : "Nouveau sondage"}
+        </button>
+      </div>
+
+      {/* Formulaire création */}
+      {showForm && (
+        <div className="card" style={{ marginBottom: 24, padding: 24, borderLeft: `4px solid ${COLORS.emerald}` }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.slate, marginBottom: 16 }}>Créer un nouveau sondage</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div className="input-group">
+              <div className="input-label">Titre du sondage</div>
+              <input className="input-field" placeholder="Ex : Adhésion au projet..." />
+            </div>
+            <div className="input-group">
+              <div className="input-label">Projet associé</div>
+              <select className="input-field">
+                <option>Dispensaire communautaire</option>
+                <option>Eglise-Ecole Adzopé</option>
+                <option>Centre de formation</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <div className="input-label">Date de début</div>
+              <input className="input-field" type="date" />
+            </div>
+            <div className="input-group">
+              <div className="input-label">Date de clôture</div>
+              <input className="input-field" type="date" />
+            </div>
+          </div>
+          <div className="input-group" style={{ marginBottom: 16 }}>
+            <div className="input-label">Cible de participants</div>
+            <input className="input-field" type="number" placeholder="Ex : 2000" />
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn btn-primary" onClick={() => setShowForm(false)}>
+              <Icon d={Icons.check} size={14} color="white" /> Enregistrer en brouillon
+            </button>
+            <button className="btn btn-outline" onClick={() => setShowForm(false)}>Annuler</button>
+          </div>
+        </div>
+      )}
+
+      {/* KPIs */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+        {[
+          { label: "Sondages actifs",       val: SONDAGES_DATA.filter(s => s.statut === "actif").length,     color: COLORS.emerald },
+          { label: "Réponses totales",       val: SONDAGES_DATA.reduce((a, s) => a + s.reponses, 0).toLocaleString("fr-FR"), color: COLORS.blue  },
+          { label: "Taux moyen participation", val: "38%", color: COLORS.gold   },
+          { label: "En préparation",         val: SONDAGES_DATA.filter(s => s.statut === "brouillon").length, color: COLORS.muted  },
+        ].map(k => (
+          <div key={k.label} className="kpi-card" style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 28, fontWeight: 700, color: k.color, fontFamily: "'Playfair Display',serif" }}>{k.val}</div>
+            <div style={{ fontSize: 12, color: COLORS.muted, marginTop: 4 }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Liste des sondages */}
+      <div className="card">
+        <div className="card-header">
+          <span className="card-title">Tous les sondages</span>
+        </div>
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Sondage</th>
+              <th>Projet</th>
+              <th>Période</th>
+              <th>Réponses</th>
+              <th>Progression</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SONDAGES_DATA.map(s => {
+              const tauxPart = s.cible > 0 ? Math.round((s.reponses / s.cible) * 100) : 0;
+              return (
+                <tr key={s.id}>
+                  <td>
+                    <div style={{ fontWeight: 600, color: COLORS.slate, fontSize: 13 }}>{s.titre}</div>
+                    <div style={{ fontSize: 11, color: COLORS.muted, marginTop: 2 }}>{s.id} · {s.questions.length} question{s.questions.length > 1 ? "s" : ""}</div>
+                  </td>
+                  <td style={{ fontSize: 12, color: COLORS.slateLight }}>{s.projet}</td>
+                  <td style={{ fontSize: 12, color: COLORS.muted }}>
+                    {s.dateDebut ? `${s.dateDebut} → ${s.dateFin}` : "Non planifié"}
+                  </td>
+                  <td>
+                    <span style={{ fontWeight: 700, color: COLORS.emerald, fontSize: 14 }}>
+                      {s.reponses.toLocaleString("fr-FR")}
+                    </span>
+                    <span style={{ fontSize: 11, color: COLORS.muted }}> / {s.cible.toLocaleString("fr-FR")}</span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 80, height: 6, background: COLORS.bg, borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${Math.min(tauxPart, 100)}%`, background: tauxPart >= 50 ? COLORS.green : COLORS.gold, borderRadius: 3 }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: COLORS.muted }}>{tauxPart}%</span>
+                    </div>
+                  </td>
+                  <td><StatutBadge statut={s.statut} /></td>
+                  <td>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button className="btn btn-outline btn-sm" onClick={() => setSelected(s.id)}>
+                        Voir résultats
+                      </button>
+                      {s.statut === "brouillon" && (
+                        <button className="btn btn-primary btn-sm">
+                          <Icon d={Icons.send} size={12} color="white" /> Publier
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Note stratégique AG */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 20 }}>
+        <div className="card" style={{ padding: "18px 20px", borderTop: `3px solid ${COLORS.gold}` }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.slate, marginBottom: 12 }}>Préparer une Assemblée Générale</div>
+          <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.7, marginBottom: 14 }}>
+            Les résultats des sondages permettent de mesurer l'adhésion réelle avant de convoquer une AG. Exportez les données pour préparer l'ordre du jour et les présentations.
+          </div>
+          <button className="btn btn-outline btn-sm" style={{ width: "100%", justifyContent: "center" }} onClick={handleExport}>
+            <Icon d={Icons.download} size={14} /> Exporter rapport AG complet
+          </button>
+          {exported && (
+            <div style={{ marginTop: 10, fontSize: 12, color: COLORS.green, textAlign: "center", fontWeight: 600 }}>
+              Rapport exporté avec succès.
+            </div>
+          )}
+        </div>
+        <div className="card" style={{ padding: "18px 20px", borderTop: `3px solid ${COLORS.blue}` }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.slate, marginBottom: 12 }}>Partager un sondage</div>
+          <div style={{ fontSize: 12, color: COLORS.muted, lineHeight: 1.7, marginBottom: 14 }}>
+            Diffusez un lien court ou un QR code pour que les membres répondent directement depuis leur mobile, sans inscription préalable.
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: "center" }}>
+              <Icon d={Icons.link || Icons.send} size={14} /> Copier le lien
+            </button>
+            <button className="btn btn-outline btn-sm" style={{ flex: 1, justifyContent: "center" }}>
+              QR Code
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── GOUVERNANCE & ORG VIEW ────────────────────────────────────────────────────
 const GouvernanceView = () => {
   const [rbacTab, setRbacTab] = useState("structure");
@@ -2330,15 +2774,17 @@ export default function DashboardApp({ onBack }) {
     } else {
       switch (view) {
         case "admin_dashboard": return <AdminDashboard />;
-        case "membres": return <MembresView />;
-        case "campagne": return <StatistiquesView />;
-        case "admin_gaps": return <GapsView isAdmin={true} />;
-        case "admin_lecture": return <LectureView />;
-        case "admin_cohortes": return <AdminCohortesView />;
-        case "gouvernance": return <GouvernanceView />;
-        case "statistiques": return <StatistiquesView />;
-        case "communications": return <CommunicationsView />;
-        case "parametres": return <ParametresView />;
+        case "projets":         return <AdminDashboard />;
+        case "sondages":        return <SondagesView />;
+        case "membres":         return <MembresView />;
+        case "campagne":        return <StatistiquesView />;
+        case "admin_gaps":      return <GapsView isAdmin={true} />;
+        case "admin_lecture":   return <LectureView />;
+        case "admin_cohortes":  return <AdminCohortesView />;
+        case "gouvernance":     return <GouvernanceView />;
+        case "statistiques":    return <StatistiquesView />;
+        case "communications":  return <CommunicationsView />;
+        case "parametres":      return <ParametresView />;
         default: return <AdminDashboard />;
       }
     }
