@@ -229,6 +229,9 @@ const I = {
   profile: "M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2|M12 3a4 4 0 100 8 4 4 0 000-8",
   heart: "M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z",
   shield: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+  projets: "M3 3h7v7H3z|M14 3h7v7h-7z|M14 14h7v7h-7z|M3 14h7v7H3z",
+  arrow: "M5 12h14|M12 5l7 7-7 7",
+  survey: "M9 11l3 3L22 4|M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11",
 };
 
 /* ─── RING DE PROGRESSION ─────────────────────────────────────────────────── */
@@ -269,23 +272,23 @@ const LoginScreen = ({ onLogin }) => {
       {/* logo */}
       <div style={{ padding: "40px 32px 0", color: "white" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 32 }}>
-          <div style={{ width: 52, height: 52, background: C.gold, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(201,149,42,.4)" }}>
-            <Ic path={I.bible} size={26} color="white" />
+          <div style={{ width: 52, height: 52, background: "rgba(201,149,42,.2)", border: "1.5px solid rgba(201,149,42,.4)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ic path={I.projets} size={26} color={C.goldL} />
           </div>
           <div>
-            <div style={{ fontSize: 11, letterSpacing: 2, opacity: .55, textTransform: "uppercase" }}>Région Adzopé</div>
-            <div className="serif" style={{ fontSize: 22, fontWeight: 700, color: C.goldL }}>Église-École</div>
+            <div style={{ fontSize: 11, letterSpacing: 2, opacity: .55, textTransform: "uppercase" }}>Plateforme Homeris</div>
+            <div className="serif" style={{ fontSize: 22, fontWeight: 700, color: C.goldL }}>Hom<span style={{ color: "white" }}>e</span>ris</div>
           </div>
         </div>
         <div className="serif" style={{ fontSize: 38, fontWeight: 700, lineHeight: 1.15, marginBottom: 10 }}>
-          Construire.<br /><span style={{ color: C.goldL }}>Digitaliser.</span><br />Édifier.
+          Consulter.<br /><span style={{ color: C.goldL }}>Contribuer.</span><br />Batir ensemble.
         </div>
         <div style={{ fontSize: 13, opacity: .6, lineHeight: 1.6, marginBottom: 32 }}>
-          Votre plateforme de contribution et de suivi du complexe scolaire d'Adzopé.
+          Plateforme multi-projets de financement participatif et gouvernance communautaire.
         </div>
         {/* stats */}
         <div style={{ display: "flex", gap: 24, marginBottom: 40 }}>
-          {[["200M","Objectif FCFA"],["4 000","Membres"],["5 ans","Horizon"]].map(([v,l]) => (
+          {[["3","Projets actifs"],["7 000","Membres cibles"],["Multi","Region"]].map(([v,l]) => (
             <div key={v}>
               <div className="serif" style={{ fontSize: 22, fontWeight: 700, color: C.goldL }}>{v}</div>
               <div style={{ fontSize: 10, opacity: .45, textTransform: "uppercase", letterSpacing: 1 }}>{l}</div>
@@ -1921,20 +1924,237 @@ const CommScreen = () => {
   );
 };
 
+/* ─── DONNÉES PROJETS HOMERIS ──────────────────────────────────────────────── */
+const PROJETS_DATA = [
+  {
+    id: "eglise-ecole",
+    nom: "Eglise-Ecole Adzope",
+    region: "Region Adzope · Cote d'Ivoire",
+    description: "Construction du complexe scolaire et renovation de l'eglise. Financement participatif sur 5 ans avec suivi mensuel des travaux.",
+    statut: "actif",
+    statutLabel: "Actif",
+    statutColor: "#27AE60",
+    statutBg: "#D5F5E3",
+    objectif: 200000000,
+    collecte: 87400000,
+    membres: 1842,
+    membresTarget: 4000,
+    enrolled: true,
+  },
+  {
+    id: "dispensaire",
+    nom: "Dispensaire communautaire",
+    region: "Villages Abradin · Cote d'Ivoire",
+    description: "Construction d'un dispensaire pour 12 villages ruraux. Sondage en cours pour mesurer l'adhesion avant le lancement officiel.",
+    statut: "sondage",
+    statutLabel: "Sondage",
+    statutColor: "#2471A3",
+    statutBg: "#D6EAF8",
+    objectif: 85000000,
+    collecte: 0,
+    membres: 312,
+    membresTarget: 2000,
+    enrolled: false,
+  },
+  {
+    id: "centre-formation",
+    nom: "Centre de formation",
+    region: "Region Centre · Cote d'Ivoire",
+    description: "Projet en preparation. Centre polyvalent de formation professionnelle et spirituelle. Lancement prevu debut 2026.",
+    statut: "avenir",
+    statutLabel: "A venir",
+    statutColor: "#8FA3A0",
+    statutBg: "#F4F1EB",
+    objectif: 50000000,
+    collecte: 0,
+    membres: 0,
+    membresTarget: 1500,
+    enrolled: false,
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*  CATALOGUE PROJETS                                                            */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+const CatalogueScreen = ({ onNav }) => {
+  const enrolled  = PROJETS_DATA.filter(p => p.enrolled);
+  const autres    = PROJETS_DATA.filter(p => !p.enrolled);
+
+  const ProjetCard = ({ p, isEnrolled }) => (
+    <div
+      onClick={() => p.statut !== "avenir" && onNav(isEnrolled ? "home" : p.statut === "sondage" ? "sondage" : "home")}
+      style={{
+        background: "white", borderRadius: 18, marginBottom: 12,
+        boxShadow: "0 2px 14px rgba(0,0,0,.07)",
+        overflow: "hidden", cursor: p.statut === "avenir" ? "default" : "pointer",
+        opacity: p.statut === "avenir" ? 0.72 : 1,
+        border: isEnrolled ? `2px solid ${p.statutColor}33` : "2px solid transparent",
+        transition: "all .2s",
+      }}
+    >
+      {/* Barre de couleur gauche si inscrit */}
+      <div style={{ display: "flex" }}>
+        {isEnrolled && <div style={{ width: 4, background: p.statutColor, flexShrink: 0 }} />}
+        <div style={{ flex: 1, padding: "16px" }}>
+
+          {/* Header carte */}
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ flex: 1, paddingRight: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.slate, marginBottom: 2, lineHeight: 1.3 }}>{p.nom}</div>
+              <div style={{ fontSize: 11, color: C.muted }}>{p.region}</div>
+            </div>
+            <span style={{
+              padding: "3px 11px", borderRadius: 20, fontSize: 10, fontWeight: 700,
+              background: p.statutBg, color: p.statutColor, flexShrink: 0,
+            }}>{p.statutLabel}</span>
+          </div>
+
+          {/* Description */}
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.55, marginBottom: 12 }}>{p.description}</div>
+
+          {/* Barre de progression (projets actifs) */}
+          {p.statut === "actif" && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: C.muted, marginBottom: 5 }}>
+                <span style={{ fontWeight: 700, color: C.emerald }}>{(p.collecte / 1000000).toFixed(1)} M FCFA collectes</span>
+                <span>{Math.round((p.collecte / p.objectif) * 100)}% de l'objectif</span>
+              </div>
+              <div style={{ height: 6, background: "#E8F5EE", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.round((p.collecte / p.objectif) * 100)}%`, background: p.statutColor, borderRadius: 3 }} />
+              </div>
+            </div>
+          )}
+
+          {/* Footer carte */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: C.muted }}>
+              <Ic path={I.group} size={13} color={C.muted} />
+              <span>
+                {p.statut === "actif"
+                  ? `${p.membres.toLocaleString("fr-FR")} membres actifs`
+                  : p.statut === "sondage"
+                  ? `${p.membres} reponses au sondage`
+                  : `Objectif : ${p.membresTarget.toLocaleString("fr-FR")} membres`}
+              </span>
+            </div>
+
+            {/* CTA */}
+            {p.statut === "actif" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4, color: p.statutColor, fontSize: 12, fontWeight: 700 }}>
+                {isEnrolled ? "Mon espace" : "Rejoindre"}
+                <Ic path={I.arrow} size={14} color={p.statutColor} />
+              </div>
+            )}
+            {p.statut === "sondage" && (
+              <div style={{
+                padding: "6px 14px", borderRadius: 20, fontSize: 11, fontWeight: 700,
+                background: p.statutBg, color: p.statutColor, cursor: "pointer",
+              }}
+                onClick={e => { e.stopPropagation(); onNav("sondage"); }}
+              >
+                Participer au sondage
+              </div>
+            )}
+            {p.statut === "avenir" && (
+              <div style={{ fontSize: 11, color: C.muted, fontStyle: "italic" }}>Bientot disponible</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: "100%", background: C.bg }}>
+
+      {/* Header Homeris */}
+      <div style={{
+        background: `linear-gradient(150deg, #0B3D26 0%, ${C.emerald} 100%)`,
+        padding: "14px 20px 32px", position: "relative", overflow: "hidden",
+      }}>
+        <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", background: "rgba(201,149,42,.08)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: -30, left: -30, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,.04)", pointerEvents: "none" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+          <div style={{ width: 38, height: 38, background: "rgba(201,149,42,.2)", border: "1px solid rgba(201,149,42,.4)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ic path={I.projets} size={18} color={C.goldL} />
+          </div>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,.4)", lineHeight: 1 }}>Plateforme</div>
+            <div className="serif" style={{ fontSize: 17, fontWeight: 700, color: "white", lineHeight: 1.2 }}>
+              Hom<span style={{ color: C.goldL }}>e</span>ris
+            </div>
+          </div>
+        </div>
+
+        <div className="serif" style={{ fontSize: 24, fontWeight: 700, color: "white", marginBottom: 4 }}>
+          Bonjour, Konan
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.55)" }}>
+          Selectionnez un projet pour acceder a votre espace
+        </div>
+
+        {/* Pills statuts */}
+        <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+          {[
+            { label: "1 actif",   color: "#27AE60", bg: "rgba(39,174,96,.2)"  },
+            { label: "1 sondage", color: "#60A5FA", bg: "rgba(96,165,250,.2)" },
+            { label: "1 a venir", color: C.muted,   bg: "rgba(255,255,255,.1)"},
+          ].map(s => (
+            <span key={s.label} style={{ padding: "3px 12px", borderRadius: 20, fontSize: 10, fontWeight: 700, background: s.bg, color: s.color, border: `1px solid ${s.color}44` }}>
+              {s.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Contenu */}
+      <div style={{ padding: "20px 16px" }}>
+
+        {/* Mes projets */}
+        {enrolled.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+              Mes projets
+            </div>
+            {enrolled.map(p => <ProjetCard key={p.id} p={p} isEnrolled={true} />)}
+          </div>
+        )}
+
+        {/* Catalogue */}
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+            Catalogue Homeris
+          </div>
+          {autres.map(p => <ProjetCard key={p.id} p={p} isEnrolled={false} />)}
+        </div>
+
+        {/* Note de bas de page */}
+        <div style={{ marginTop: 8, padding: "12px 16px", background: "white", borderRadius: 12, borderLeft: `3px solid ${C.gold}` }}>
+          <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.6 }}>
+            Votre profil Homeris vous permet de participer a plusieurs projets depuis un seul compte.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  APP SHELL                                                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 const NAV = [
-  { id: "home",    label: "Accueil",  path: I.home  },
-  { id: "pay",     label: "Cotiser",  path: I.pay   },
-  { id: "bible",   label: "Bible",    path: I.bible },
-  { id: "cohorte", label: "Cohorte",  path: I.group },
-  { id: "comm",    label: "Comm.",    path: I.comm  },
+  { id: "projets", label: "Projets",  path: I.projets },
+  { id: "home",    label: "Accueil",  path: I.home    },
+  { id: "pay",     label: "Cotiser",  path: I.pay     },
+  { id: "bible",   label: "Bible",    path: I.bible   },
+  { id: "cohorte", label: "Cohorte",  path: I.group   },
 ];
 
 export default function MobileApp({ onBack }) {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [screen, setScreen] = useState("home");
+  const [screen, setScreen] = useState("projets");
   const screenRef = useRef(null);
   const [commDot, setCommDot] = useState(true);
 
@@ -1944,7 +2164,7 @@ export default function MobileApp({ onBack }) {
     screenRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const SCREENS = { home: HomeScreen, pay: PayScreen, build: BuildScreen, roi: RoiScreen, bible: BibleScreen, cohorte: CohorteScreen, comm: CommScreen };
+  const SCREENS = { projets: CatalogueScreen, home: HomeScreen, pay: PayScreen, build: BuildScreen, roi: RoiScreen, bible: BibleScreen, cohorte: CohorteScreen, comm: CommScreen, sondage: CatalogueScreen };
   const Screen = SCREENS[screen] || HomeScreen;
 
   return (
