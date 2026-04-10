@@ -2141,6 +2141,366 @@ const CatalogueScreen = ({ onNav }) => {
   );
 };
 
+/* ─── SONDAGE MOBILE DATA ─────────────────────────────────────────────────── */
+const SONDAGE_MOBILE = {
+  id: "S-2025-01",
+  titre: "Dispensaire Abradin",
+  sousTitre: "Votre avis compte pour le lancement de ce projet communautaire",
+  projet: "Dispensaire communautaire",
+  reponsesDeja: 312,
+  cible: 2000,
+  questions: [
+    {
+      id: "q1",
+      texte: "Êtes-vous favorable à la construction d'un dispensaire dans les villages d'Abradin ?",
+      type: "oui_non",
+      resultats: { oui: 287, non: 18, abstention: 7 },
+    },
+    {
+      id: "q2",
+      texte: "Êtes-vous prêt à contribuer financièrement à ce projet ?",
+      type: "oui_non",
+      resultats: { oui: 241, non: 54, abstention: 17 },
+    },
+    {
+      id: "q3",
+      texte: "Quel montant mensuel pourriez-vous engager ?",
+      type: "choix",
+      options: ["Moins de 2 000 FCFA", "2 000 – 5 000 FCFA", "5 000 – 10 000 FCFA", "Plus de 10 000 FCFA"],
+      resultats: [89, 134, 67, 22],
+    },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/*  SONDAGE SCREEN                                                               */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+const SondageScreen = ({ onNav }) => {
+  const s = SONDAGE_MOBILE;
+  const total = s.questions.length;
+
+  // step: 0=intro, 1..total=questions, total+1=resultats
+  const [step,      setStep]      = useState(0);
+  const [reponses,  setReponses]  = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [loading,   setLoading]   = useState(false);
+
+  const handleRepondre = (qId, val) => setReponses(r => ({ ...r, [qId]: val }));
+
+  const handleSuivant = () => {
+    if (step < total) { setStep(s => s + 1); return; }
+    setLoading(true);
+    setTimeout(() => { setLoading(false); setSubmitted(true); setStep(total + 1); }, 1400);
+  };
+
+  const qActuelle = step >= 1 && step <= total ? s.questions[step - 1] : null;
+  const repActuelle = qActuelle ? reponses[qActuelle.id] : null;
+
+  /* ── Écran intro ─────────────────────────────────────────────────── */
+  if (step === 0) return (
+    <div style={{ minHeight: "100%", background: C.bg }}>
+      <div style={{
+        background: `linear-gradient(150deg,#0B3D26,${C.emerald})`,
+        padding: "18px 20px 36px", position: "relative", overflow: "hidden",
+      }}>
+        <div style={{ position: "absolute", top: -60, right: -60, width: 220, height: 220, borderRadius: "50%", background: "rgba(96,165,250,.1)" }} />
+        <button onClick={() => onNav("projets")} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,.12)", border: "none", color: "rgba(255,255,255,.7)", padding: "6px 12px", borderRadius: 8, fontSize: 12, cursor: "pointer", marginBottom: 20, fontFamily: "Nunito,sans-serif" }}>
+          <Ic path={I.back} size={14} color="rgba(255,255,255,.7)" /> Catalogue
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div style={{ width: 42, height: 42, background: "rgba(96,165,250,.25)", border: "1px solid rgba(96,165,250,.5)", borderRadius: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Ic path={I.survey} size={20} color="#60A5FA" />
+          </div>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,.4)" }}>Sondage</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "white" }}>{s.projet}</div>
+          </div>
+        </div>
+        <div className="serif" style={{ fontSize: 26, fontWeight: 700, color: "white", lineHeight: 1.2, marginBottom: 8 }}>
+          {s.titre}
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)", lineHeight: 1.6 }}>{s.sousTitre}</div>
+      </div>
+
+      <div style={{ padding: "20px 16px" }}>
+        {/* Infos sondage */}
+        <div className="card" style={{ padding: "16px 18px", marginBottom: 16 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: "#2471A3", fontFamily: "Cormorant Garamond,serif" }}>{s.reponsesDeja}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>Réponses déjà reçues</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: C.emerald, fontFamily: "Cormorant Garamond,serif" }}>{s.total || total}</div>
+              <div style={{ fontSize: 10, color: C.muted }}>Questions</div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: C.gold, fontFamily: "Cormorant Garamond,serif" }}>~2 min</div>
+              <div style={{ fontSize: 10, color: C.muted }}>Durée estimée</div>
+            </div>
+          </div>
+          <div style={{ height: 5, background: C.border, borderRadius: 3, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${Math.round((s.reponsesDeja / s.cible) * 100)}%`, background: "#2471A3", borderRadius: 3 }} />
+          </div>
+          <div style={{ fontSize: 11, color: C.muted, marginTop: 6, textAlign: "center" }}>
+            {Math.round((s.reponsesDeja / s.cible) * 100)}% de la cible atteinte ({s.cible.toLocaleString("fr-FR")} participants visés)
+          </div>
+        </div>
+
+        {/* Ce que vous ferez */}
+        <div style={{ marginBottom: 20 }}>
+          {[
+            { icon: I.survey,  txt: "Répondez à " + total + " questions simples" },
+            { icon: I.shield,  txt: "Vos réponses sont anonymes et agrégées" },
+            { icon: I.chart,   txt: "Résultats affichés après votre participation" },
+          ].map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 2 ? `1px solid ${C.border}` : "none" }}>
+              <div style={{ width: 32, height: 32, background: "rgba(26,107,74,.08)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Ic path={item.icon} size={16} color={C.emerald} />
+              </div>
+              <div style={{ fontSize: 13, color: C.slate }}>{item.txt}</div>
+            </div>
+          ))}
+        </div>
+
+        <button className="btn btn-em" style={{ width: "100%" }} onClick={handleSuivant}>
+          Commencer le sondage
+        </button>
+        <button onClick={() => onNav("projets")} style={{ width: "100%", marginTop: 10, padding: "12px", background: "transparent", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", fontFamily: "Nunito,sans-serif" }}>
+          Pas maintenant
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── Écran question ──────────────────────────────────────────────── */
+  if (qActuelle) return (
+    <div style={{ minHeight: "100%", background: C.bg, display: "flex", flexDirection: "column" }}>
+
+      {/* Barre de progression */}
+      <div style={{ background: "white", padding: "14px 20px 0", boxShadow: "0 1px 6px rgba(0,0,0,.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <button onClick={() => setStep(s => Math.max(0, s - 1))} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: C.muted, fontSize: 12, fontFamily: "Nunito,sans-serif" }}>
+            <Ic path={I.back} size={14} color={C.muted} /> Précédent
+          </button>
+          <span style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>Question {step}/{total}</span>
+          <span style={{ fontSize: 12, color: C.muted, opacity: 0 }}>espace</span>
+        </div>
+        <div style={{ height: 4, background: C.border, borderRadius: 2, overflow: "hidden", marginBottom: 0 }}>
+          <div style={{ height: "100%", width: `${(step / total) * 100}%`, background: C.emerald, borderRadius: 2, transition: "width .4s ease" }} />
+        </div>
+        {/* Dots */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, padding: "10px 0 12px" }}>
+          {s.questions.map((_, i) => (
+            <div key={i} style={{ width: i + 1 === step ? 20 : 8, height: 8, borderRadius: 4, background: i + 1 < step ? C.emerald : i + 1 === step ? C.emerald : C.border, transition: "all .3s" }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Corps question */}
+      <div style={{ flex: 1, padding: "24px 16px 16px" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: C.slate, lineHeight: 1.5, marginBottom: 28, fontFamily: "Cormorant Garamond,serif", fontSize: 20 }}>
+          {qActuelle.texte}
+        </div>
+
+        {/* Choix Oui/Non */}
+        {qActuelle.type === "oui_non" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {[
+              { val: "oui",        label: "Oui, je suis favorable",   color: C.green,  bg: C.greenL,  icon: I.ok    },
+              { val: "non",        label: "Non, je ne suis pas d'accord", color: C.red, bg: C.redL,   icon: I.sos   },
+              { val: "abstention", label: "Je m'abstiens",              color: C.muted, bg: C.bg,      icon: I.shield },
+            ].map(opt => (
+              <div
+                key={opt.val}
+                onClick={() => handleRepondre(qActuelle.id, opt.val)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 14,
+                  padding: "16px 18px", borderRadius: 14, cursor: "pointer",
+                  border: `2px solid ${repActuelle === opt.val ? opt.color : C.border}`,
+                  background: repActuelle === opt.val ? opt.bg : "white",
+                  transition: "all .2s",
+                  boxShadow: repActuelle === opt.val ? `0 4px 16px ${opt.color}22` : "0 1px 6px rgba(0,0,0,.05)",
+                }}
+              >
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: repActuelle === opt.val ? opt.color : C.border, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all .2s" }}>
+                  <Ic path={opt.icon} size={18} color={repActuelle === opt.val ? "white" : C.muted} />
+                </div>
+                <span style={{ fontSize: 14, fontWeight: repActuelle === opt.val ? 700 : 500, color: repActuelle === opt.val ? opt.color : C.slate }}>
+                  {opt.label}
+                </span>
+                {repActuelle === opt.val && (
+                  <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: opt.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Ic path={I.check} size={12} color="white" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Choix multiple */}
+        {qActuelle.type === "choix" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {qActuelle.options.map((opt, oi) => {
+              const isSelected = repActuelle === opt;
+              return (
+                <div
+                  key={opt}
+                  onClick={() => handleRepondre(qActuelle.id, opt)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "14px 16px", borderRadius: 12, cursor: "pointer",
+                    border: `2px solid ${isSelected ? C.emerald : C.border}`,
+                    background: isSelected ? "rgba(26,107,74,.06)" : "white",
+                    transition: "all .2s",
+                  }}
+                >
+                  <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2px solid ${isSelected ? C.emerald : C.border}`, background: isSelected ? C.emerald : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all .2s" }}>
+                    {isSelected && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white" }} />}
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: isSelected ? 700 : 400, color: isSelected ? C.emerald : C.slate }}>
+                    {opt}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Bouton suivant */}
+      <div style={{ padding: "0 16px 20px" }}>
+        <button
+          className="btn btn-em"
+          style={{ width: "100%", opacity: repActuelle ? 1 : 0.45 }}
+          disabled={!repActuelle}
+          onClick={handleSuivant}
+        >
+          {loading ? <div className="spinner" /> : step === total ? "Soumettre mes réponses" : "Question suivante"}
+        </button>
+        <div style={{ textAlign: "center", marginTop: 10, fontSize: 11, color: C.muted }}>
+          {step === total ? "Dernière question" : `${total - step} question${total - step > 1 ? "s" : ""} restante${total - step > 1 ? "s" : ""}`}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── Écran résultats ─────────────────────────────────────────────── */
+  return (
+    <div style={{ minHeight: "100%", background: C.bg }}>
+      {/* Header merci */}
+      <div style={{ background: `linear-gradient(150deg,#0B3D26,${C.emerald})`, padding: "24px 20px 32px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: "rgba(201,149,42,.1)" }} />
+        <div style={{ width: 60, height: 60, background: "rgba(39,174,96,.25)", border: "2px solid rgba(39,174,96,.5)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", position: "relative" }}>
+          <Ic path={I.ok} size={28} color="#4ADE80" />
+        </div>
+        <div className="serif" style={{ fontSize: 22, fontWeight: 700, color: "white", marginBottom: 6 }}>Merci pour votre participation !</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.6)" }}>Vos réponses ont été enregistrées et contribuent au lancement du projet.</div>
+      </div>
+
+      <div style={{ padding: "20px 16px" }}>
+        {/* Récap vos réponses */}
+        <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+          Vos réponses
+        </div>
+        <div className="card" style={{ padding: "4px 16px", marginBottom: 20 }}>
+          {s.questions.map((q, qi) => (
+            <div key={q.id} style={{ padding: "12px 0", borderBottom: qi < s.questions.length - 1 ? `1px solid ${C.border}` : "none" }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>Q{qi + 1}</div>
+              <div style={{ fontSize: 13, color: C.slate, marginBottom: 6, lineHeight: 1.4 }}>{q.texte}</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 20, background: "rgba(26,107,74,.08)", border: `1px solid ${C.emerald}44` }}>
+                <Ic path={I.check} size={12} color={C.emerald} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: C.emerald }}>{reponses[q.id] || "—"}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Résultats agrégés */}
+        <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, letterSpacing: 2, textTransform: "uppercase", marginBottom: 12 }}>
+          Résultats de la communauté ({s.reponsesDeja + 1} participants)
+        </div>
+
+        {s.questions.map((q, qi) => {
+          const isOuiNon = q.type === "oui_non";
+          const totalRep = isOuiNon
+            ? q.resultats.oui + q.resultats.non + q.resultats.abstention
+            : q.resultats.reduce((a, b) => a + b, 0);
+
+          return (
+            <div key={q.id} className="card" style={{ marginBottom: 12, padding: "14px 16px" }}>
+              <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>Q{qi + 1} — {q.texte}</div>
+
+              {isOuiNon && (
+                <div>
+                  {[
+                    { label: "Oui",       val: q.resultats.oui,        color: C.green },
+                    { label: "Non",        val: q.resultats.non,        color: C.red   },
+                    { label: "Abstention", val: q.resultats.abstention, color: C.muted },
+                  ].map(r => {
+                    const pct = totalRep > 0 ? Math.round((r.val / totalRep) * 100) : 0;
+                    const isMine = reponses[q.id] === r.label.toLowerCase();
+                    return (
+                      <div key={r.label} style={{ marginBottom: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                          <span style={{ color: r.color, fontWeight: isMine ? 700 : 400 }}>
+                            {r.label} {isMine && <span style={{ fontSize: 10, background: r.color, color: "white", padding: "1px 6px", borderRadius: 10, marginLeft: 4 }}>Votre réponse</span>}
+                          </span>
+                          <span style={{ fontWeight: 700, color: r.color }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 7, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: r.color, borderRadius: 4 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {!isOuiNon && (
+                <div>
+                  {q.options.map((opt, oi) => {
+                    const pct = totalRep > 0 ? Math.round((q.resultats[oi] / totalRep) * 100) : 0;
+                    const isMine = reponses[q.id] === opt;
+                    const colors = [C.emerald, C.gold, "#2471A3", "#7D3C98"];
+                    return (
+                      <div key={opt} style={{ marginBottom: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                          <span style={{ color: isMine ? colors[oi % 4] : C.slate, fontWeight: isMine ? 700 : 400 }}>
+                            {opt} {isMine && <span style={{ fontSize: 10, background: colors[oi % 4], color: "white", padding: "1px 6px", borderRadius: 10, marginLeft: 4 }}>Votre choix</span>}
+                          </span>
+                          <span style={{ fontWeight: 700, color: colors[oi % 4] }}>{pct}%</span>
+                        </div>
+                        <div style={{ height: 7, background: C.border, borderRadius: 4, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${pct}%`, background: colors[oi % 4], borderRadius: 4 }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* CTA rejoindre */}
+        <div style={{ marginTop: 8, padding: "16px", background: "white", borderRadius: 14, textAlign: "center", boxShadow: "0 2px 12px rgba(0,0,0,.06)" }}>
+          <div style={{ fontSize: 13, color: C.slate, marginBottom: 14, lineHeight: 1.5 }}>
+            Rejoignez officiellement le projet pour etre notifie de son lancement et contribuer.
+          </div>
+          <button className="btn btn-em" style={{ width: "100%", marginBottom: 8 }} onClick={() => onNav("home")}>
+            Rejoindre le projet Dispensaire
+          </button>
+          <button onClick={() => onNav("projets")} style={{ width: "100%", padding: "11px", background: "transparent", border: `1.5px solid ${C.border}`, borderRadius: 12, color: C.muted, fontSize: 13, cursor: "pointer", fontFamily: "Nunito,sans-serif" }}>
+            Retour au catalogue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  APP SHELL                                                                   */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -2164,7 +2524,7 @@ export default function MobileApp({ onBack }) {
     screenRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const SCREENS = { projets: CatalogueScreen, home: HomeScreen, pay: PayScreen, build: BuildScreen, roi: RoiScreen, bible: BibleScreen, cohorte: CohorteScreen, comm: CommScreen, sondage: CatalogueScreen };
+  const SCREENS = { projets: CatalogueScreen, home: HomeScreen, pay: PayScreen, build: BuildScreen, roi: RoiScreen, bible: BibleScreen, cohorte: CohorteScreen, comm: CommScreen, sondage: SondageScreen };
   const Screen = SCREENS[screen] || HomeScreen;
 
   return (
