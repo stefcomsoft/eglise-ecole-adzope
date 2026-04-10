@@ -2,139 +2,246 @@ import { useState } from 'react'
 import DashboardApp from './dashboard/DashboardApp.jsx'
 import MobileApp from './mobile/MobileApp.jsx'
 
-const COLORS = {
-  emeraldDark: '#0F4530',
-  emerald: '#1A6B4A',
-  gold: '#C9952A',
-  goldLight: '#E8B84B',
-  bg: '#F4F1EB',
-  border: '#E0D8C8',
-  slate: '#2C3E50',
-  muted: '#8FA3A0',
+const C = {
+  emeraldDark: '#0B3D26',
+  emerald:     '#1A6B4A',
+  emeraldMid:  '#1E7D57',
+  gold:        '#C9952A',
+  goldLight:   '#E8B84B',
+  goldPale:    '#FFF8E8',
+  bg:          '#F4F1EB',
+  border:      '#E0D8C8',
+  slate:       '#2C3E50',
+  muted:       '#8FA3A0',
+  white:       '#FFFFFF',
 }
 
+// ─── LOGO HOMERIS ──────────────────────────────────────────────────────────────
+function HomerisLogo({ size = 44 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
+      {/* Toit / fronton — symbole maison communautaire */}
+      <path d="M4 20L22 6l18 14" stroke={C.goldLight} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Corps du batiment */}
+      <rect x="8" y="20" width="28" height="18" rx="1.5" stroke="white" strokeWidth="2" fill="none"/>
+      {/* Piliers / colonnes (3 projets) */}
+      <rect x="12" y="24" width="4" height="10" rx="1" fill={C.goldLight} opacity="0.9"/>
+      <rect x="20" y="24" width="4" height="10" rx="1" fill={C.goldLight} opacity="0.6"/>
+      <rect x="28" y="24" width="4" height="10" rx="1" fill={C.goldLight} opacity="0.3"/>
+    </svg>
+  )
+}
+
+// ─── PROJET CARD (catalogue vitrine) ──────────────────────────────────────────
+function ProjetBadge({ label, statut, color }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '7px 14px', borderRadius: 10,
+      background: 'rgba(255,255,255,0.07)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      marginBottom: 8,
+    }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
+      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 500, flex: 1 }}>{label}</span>
+      <span style={{ fontSize: 10, color, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase' }}>{statut}</span>
+    </div>
+  )
+}
+
+// ─── ENTRY CARD ───────────────────────────────────────────────────────────────
+function EntryCard({ icon, title, description, tags, tagColor, tagBg, actionLabel, accentColor, onClick }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: 280, background: C.white, borderRadius: 22, padding: 28,
+        cursor: 'pointer',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        boxShadow: hovered
+          ? '0 24px 56px rgba(0,0,0,0.22)'
+          : '0 8px 32px rgba(0,0,0,0.12)',
+        transition: 'all 0.25s cubic-bezier(0.16,1,0.3,1)',
+        display: 'flex', flexDirection: 'column',
+      }}
+    >
+      <div style={{
+        width: 52, height: 52, background: accentColor, borderRadius: 14,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18,
+        boxShadow: `0 6px 18px ${accentColor}55`,
+      }}>
+        {icon}
+      </div>
+
+      <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: C.slate, marginBottom: 8 }}>
+        {title}
+      </div>
+      <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.65, marginBottom: 18, flex: 1 }}>
+        {description}
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 20 }}>
+        {tags.map(t => (
+          <span key={t} style={{ fontSize: 10, background: tagBg, color: tagColor, padding: '3px 11px', borderRadius: 20, fontWeight: 700 }}>{t}</span>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: accentColor, fontSize: 13, fontWeight: 700 }}>
+        {actionLabel}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+// ─── SEPARATEUR ───────────────────────────────────────────────────────────────
+function Divider() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, margin: '8px 0 32px' }}>
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+      <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', letterSpacing: 2, textTransform: 'uppercase' }}>Acces plateforme</span>
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+    </div>
+  )
+}
+
+// ─── APP ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const [mode, setMode] = useState(null) // null | 'dashboard' | 'mobile'
 
   if (mode === 'dashboard') return <DashboardApp onBack={() => setMode(null)} />
   if (mode === 'mobile')    return <MobileApp    onBack={() => setMode(null)} />
 
-  // Launcher screen
   return (
     <div style={{
-      minHeight: '100vh',
-      background: `linear-gradient(135deg, ${COLORS.emeraldDark} 0%, ${COLORS.emerald} 55%, #1B5E3A 100%)`,
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: 32, fontFamily: "'DM Sans', sans-serif",
+      minHeight: '100dvh',
+      background: `linear-gradient(150deg, ${C.emeraldDark} 0%, ${C.emerald} 45%, ${C.emeraldMid} 100%)`,
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '48px 24px',
+      fontFamily: "'DM Sans', sans-serif",
+      position: 'relative', overflow: 'hidden',
     }}>
-      {/* Logo */}
-      <div style={{ textAlign: 'center', marginBottom: 56 }}>
-        <div style={{ width: 72, height: 72, background: COLORS.gold, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-          </svg>
+
+      {/* Cercles decoratifs fond */}
+      <div style={{ position: 'absolute', top: -120, right: -120, width: 480, height: 480, borderRadius: '50%', background: 'rgba(201,149,42,0.06)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -80, left: -80, width: 320, height: 320, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
+
+      {/* ── EN-TETE HOMERIS ─────────────────────────────────────────────────── */}
+      <div style={{ textAlign: 'center', marginBottom: 48, zIndex: 1 }}>
+
+        {/* Logo */}
+        <div style={{
+          width: 80, height: 80, background: 'rgba(201,149,42,0.15)',
+          border: '1.5px solid rgba(201,149,42,0.35)',
+          borderRadius: 22, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', margin: '0 auto 22px',
+          backdropFilter: 'blur(8px)',
+        }}>
+          <HomerisLogo size={44} />
         </div>
-        <div style={{ fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)', marginBottom: 8 }}>
-          Région Adzopé • Côte d'Ivoire
+
+        {/* Eyebrow */}
+        <div style={{ fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', marginBottom: 12 }}>
+          Cote d'Ivoire &nbsp;·&nbsp; Plateforme communautaire
         </div>
-        <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 42, fontWeight: 700, color: 'white', lineHeight: 1.1, marginBottom: 10 }}>
-          Église-École
+
+        {/* Nom */}
+        <h1 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 54, fontWeight: 700, color: C.white,
+          lineHeight: 1, marginBottom: 6, letterSpacing: -1,
+        }}>
+          Hom<span style={{ color: C.goldLight }}>é</span>ris
         </h1>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 15, maxWidth: 420, lineHeight: 1.7 }}>
-          Plateforme numérique intégrée — Financement participatif
-          & renforcement de la maturité spirituelle
+
+        {/* Tagline */}
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, marginBottom: 32, letterSpacing: 0.2 }}>
+          Financement participatif &amp; gouvernance de projets communautaires
         </p>
+
+        {/* Projets actifs — vitrine */}
+        <div style={{ maxWidth: 340, margin: '0 auto', textAlign: 'left' }}>
+          <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', marginBottom: 10 }}>
+            Projets sur la plateforme
+          </div>
+          <ProjetBadge label="Eglise-Ecole Adzope"      statut="Actif"    color={C.goldLight} />
+          <ProjetBadge label="Dispensaire communautaire" statut="Sondage"  color="#60A5FA"     />
+          <ProjetBadge label="Centre de formation"       statut="A venir"  color={C.muted}     />
+        </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ display: 'flex', gap: 36, marginBottom: 56 }}>
-        {[['200M', 'Objectif FCFA'], ['4 000', 'Membres cibles'], ['5 ans', 'Horizon projet']].map(([v, l]) => (
-          <div key={v} style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: COLORS.goldLight }}>{v}</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1 }}>{l}</div>
+      {/* ── KPIs ─────────────────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 40, marginBottom: 44, zIndex: 1 }}>
+        {[
+          ['3',     'Projets'],
+          ['7 000', 'Membres cibles'],
+          ['Multi', 'Region'],
+        ].map(([v, l]) => (
+          <div key={l} style={{ textAlign: 'center' }}>
+            <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: C.goldLight }}>{v}</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 2 }}>{l}</div>
           </div>
         ))}
       </div>
 
-      {/* App selectors */}
-      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {/* Dashboard */}
-        <div
-          onClick={() => setMode('dashboard')}
-          style={{
-            width: 280, background: 'white', borderRadius: 20, padding: 28,
-            cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.25)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)' }}
-        >
-          <div style={{ width: 48, height: 48, background: COLORS.emerald, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: COLORS.emeraldDark, marginBottom: 6 }}>
-            Dashboard Admin
-          </div>
-          <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.6, marginBottom: 18 }}>
-            Tableau de bord régional, gestion des membres, campagnes, gaps, cohortes et statistiques.
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['Président', 'Responsables', 'Comptabilité'].map(r => (
-              <span key={r} style={{ fontSize: 10, background: '#E8F5EE', color: COLORS.emerald, padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{r}</span>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 6, color: COLORS.emerald, fontSize: 13, fontWeight: 600 }}>
-            Ouvrir le Dashboard
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </div>
+      <Divider />
 
-        {/* Mobile App */}
-        <div
+      {/* ── CARTES D'ACCES ───────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', zIndex: 1 }}>
+
+        {/* Dashboard Admin */}
+        <EntryCard
+          onClick={() => setMode('dashboard')}
+          accentColor={C.emerald}
+          tagColor={C.emerald}
+          tagBg="#E8F5EE"
+          actionLabel="Ouvrir le Dashboard"
+          title="Dashboard Admin"
+          description="Gestion multi-projets, sondages, membres, cohortes, gouvernance et statistiques consolidees."
+          tags={['President', 'Responsables', 'Comptabilite']}
+          icon={
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          }
+        />
+
+        {/* App Mobile */}
+        <EntryCard
           onClick={() => setMode('mobile')}
-          style={{
-            width: 280, background: 'white', borderRadius: 20, padding: 28,
-            cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.25)' }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)' }}
-        >
-          <div style={{ width: 48, height: 48, background: COLORS.gold, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+          accentColor={C.gold}
+          tagColor={C.gold}
+          tagBg={C.goldPale}
+          actionLabel="Ouvrir l'App Mobile"
+          title="Application Mobile"
+          description="Catalogue projets, sondages, cotisations, lecture biblique, cohortes et suivi chantier."
+          tags={['Membres', 'iOS / Android', 'IA Koffi']}
+          icon={
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2"/>
               <path d="M12 18h.01"/>
             </svg>
-          </div>
-          <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 18, fontWeight: 700, color: COLORS.emeraldDark, marginBottom: 6 }}>
-            Application Mobile
-          </div>
-          <div style={{ fontSize: 13, color: COLORS.muted, lineHeight: 1.6, marginBottom: 18 }}>
-            Interface membre : cotisations, lecture biblique, cohortes, QCM IA, gamification et suivi chantier.
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['Membres', 'iOS / Android', 'IA Koffi'].map(r => (
-              <span key={r} style={{ fontSize: 10, background: '#FFF8E8', color: COLORS.gold, padding: '3px 10px', borderRadius: 20, fontWeight: 600 }}>{r}</span>
-            ))}
-          </div>
-          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 6, color: COLORS.gold, fontSize: 13, fontWeight: 600 }}>
-            Ouvrir l'App Mobile
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </div>
+          }
+        />
+
+      </div>
+
+      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
+      <div style={{ marginTop: 52, textAlign: 'center', zIndex: 1 }}>
+        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 11, letterSpacing: 1 }}>
+          HOMERIS v2.0 &nbsp;·&nbsp; PROJET THOM &nbsp;·&nbsp; EduCI Initiative &nbsp;·&nbsp; Cote d'Ivoire
+        </div>
+        <div style={{ color: 'rgba(255,255,255,0.12)', fontSize: 10, marginTop: 6 }}>
+          Branche : homeris &nbsp;·&nbsp; Base : v1.0-eglise-ecole
         </div>
       </div>
 
-      {/* Footer */}
-      <div style={{ marginTop: 48, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
-        PROJET THOM • EduCI Initiative • v1.0.0
-      </div>
     </div>
   )
 }
